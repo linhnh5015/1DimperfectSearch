@@ -10,7 +10,7 @@ import numpy as np
 import math
 
 budget = 200
-numpoints = 6
+numpoints = 20
 xmin = -200
 xmax = 200
 min_search_cost = 1
@@ -44,7 +44,7 @@ target_distribution = target_distribution/sum_dist
 
 p_prime = np.array([])
 p = np.array([])
-max_detection_prob = -1
+# max_detection_prob = -1
 for l in range(numpoints):
     for r in range(l, numpoints):
         budget_tau = max(0, budget - (points[r] - points[l]))
@@ -60,7 +60,4 @@ for l in range(numpoints):
                     p[t] = subproblems[argmax]
             p_prime = np.copy(p)
         if budget_tau >= 1:
-            if p[budget_tau-1] > max_detection_prob:
-                max_detection_prob = p[budget_tau-1]
-
-print('The DP returns the maximum detection probability:' + str(max_detection_prob))
+            print('The DP returns the maximum detection probability:' + str(p[budget_tau-1]) + ' for l = ' + str(l) + ' r = ' + str(r))
