@@ -9,7 +9,7 @@ import random
 import numpy as np
 import math
 
-budget = 200
+budget = 600
 numpoints = 20
 xmin = -200
 xmax = 200
@@ -53,7 +53,7 @@ for l in range(numpoints):
         for i in range(l , r+1):
             for t in range(budget_tau):
                 subproblems = np.array([])
-                for j in range(math.floor(t/search_cost[i])):
+                for j in range(math.floor(t/search_cost[i]) + 1):
                     subproblems = np.append(subproblems, p_prime[max(0, t - j*search_cost[i])] + (1 - beta[i]**j)*target_distribution[i])
                 if (subproblems.size > 0):
                     argmax = np.argmax(subproblems)
