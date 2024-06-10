@@ -61,7 +61,7 @@ for i in range(n):
 for i in range(n):
     for j in range(i + 1, n):
         geometric_graph.add_edge(i, j, weight = euclidean_distance(nodes[i], nodes[j]))
-starting_point = target = random.randint(0, n-1)
+starting_point = random.randint(0, n-1)
 overall_TSP_tour = nx.approximation.traveling_salesman_problem(geometric_graph)[:-1]
 index_of_starting_point = overall_TSP_tour.index(starting_point)
 
