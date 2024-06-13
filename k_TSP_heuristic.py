@@ -30,7 +30,7 @@ def path_length(path):
 def search(path, target, specific_num_passes):
     for i, node in enumerate(path):
         for j in range(specific_num_passes[i]):
-            if node == target and random.random() > beta:
+            if node == target and random.random() > alpha:
                 return True
             
 # size of bounding box
@@ -40,7 +40,7 @@ ymin = 0
 ymax = 10
 
 n = 20 # number of nodes
-beta = 0.3 # false negative rate
+alpha = 0.3 # false negative rate
 budget = 50 # total budget for traveling and searching
 search_cost = 1 # time it takes to do 1 search at a node
 
@@ -61,7 +61,7 @@ for i in range(n):
 for i in range(n):
     for j in range(i + 1, n):
         geometric_graph.add_edge(i, j, weight = euclidean_distance(nodes[i], nodes[j]))
-starting_point = random.randint(0, n-1)
+starting_point = target = random.randint(0, n-1)
 overall_TSP_tour = nx.approximation.traveling_salesman_problem(geometric_graph)[:-1]
 index_of_starting_point = overall_TSP_tour.index(starting_point)
 
@@ -89,7 +89,7 @@ for p in k_TSP_paths:
     specific_num_passes = [total_num_passes // len(p) + (1 if x < total_num_passes % len(p) else 0)  for x in range (len(p))]
     theoretical_prob_of_detection = 0
     for s in specific_num_passes:
-        theoretical_prob_of_detection += 1/n*(1 - beta**s)
+        theoretical_prob_of_detection += 1/n*(1 - alpha**s)
     theoretical_probs.append(theoretical_prob_of_detection)
     
 best_route_index = np.argmax(theoretical_probs)

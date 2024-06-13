@@ -17,7 +17,7 @@ import numpy as np
 import math
 import networkx as nx
 import time
-
+import matplotlib.pyplot as plt
 
 
 def ordered_DP_heuristic(points, search_cost, target_distribution, beta, budget):
@@ -50,7 +50,8 @@ def ordered_DP_heuristic(points, search_cost, target_distribution, beta, budget)
     search_cost = np.append(np.array([0]), search_cost)
     target_distribution = np.append(np.array([0]), target_distribution)
     beta = np.append(np.array([0]), beta)
-
+    
+    pointers = [[(0, 0) for _ in range(tau)] for __ in range(numpoints + 1)]
 
     # table of subproblems
     p = np.zeros((numpoints+1, tau))
@@ -60,9 +61,20 @@ def ordered_DP_heuristic(points, search_cost, target_distribution, beta, budget)
             for k in range(0, i):
                 for j in range(math.floor((t - euclidean_distance(i, k)*big_C)/(search_cost[i]*big_C)) + 1):
                     subproblems = np.append(subproblems, p[k, max(0, t - math.floor(j*search_cost[i]*big_C + euclidean_distance(i, k)*big_C))] + (1 - beta[i]**j)*target_distribution[i])
-                if (subproblems.size > 0):
-                    argmax = np.argmax(subproblems)
-                    p[i, t] = subproblems[argmax]
+            if (subproblems.size > 0):
+                argmax = np.argmax(subproblems)
+                p[i, t] = subproblems[argmax]
+    # uncomment lines 68-77 if you want to follow the pointers to count how many points are searched
+    #         for k in range(0, i):
+    #             for j in range(math.floor((t - euclidean_distance(i, k)*big_C)/(search_cost[i]*big_C)) + 1):
+    #                 if (p[k, max(0, t - math.floor(j*search_cost[i]*big_C + euclidean_distance(i, k)*big_C))] + (1 - beta[i]**j)*target_distribution[i]) == subproblems[argmax]:
+    #                     pointers[i][t] = (k,max(0, t - math.floor(j*search_cost[i]*big_C + euclidean_distance(i, k)*big_C)))
+    # # follow the pointers
+    # num_points_searched = 1
+    # (ii, tt) = pointers[numpoints][tau-1]
+    # while (ii != 0):
+    #     (ii, tt) = pointers[ii][tt]
+    #     num_points_searched += 1
     return p[numpoints,tau-1]
 
 def greedy_heuristic(points, search_cost, target_distribution, beta, budget):
@@ -102,7 +114,8 @@ def greedy_heuristic(points, search_cost, target_distribution, beta, budget):
         else:
             tau = 0
         #print(s)
-        
+    
+    no_points_searched = np.count_nonzero(s)
     prob_of_success = 0
     for i in range(numpoints):
         prob_of_success += (1 - beta[i]**s[i])*target_distribution[i]
@@ -117,13 +130,16 @@ ymin = 0
 ymax = 10
 
 overall_results = []
-for budget in [100 + ii for ii in range (0, 300, 50)]:
+budgets_array = [10 + ii for ii in range (0, 100, 10)]
+epochs_num = 30
+
+for budget in budgets_array:
     print('budget = ' + str(budget))
     greedy_p_result_log = []
     ordered_p_result_log = []
     greedy_p_running_time_log = []
     ordered_p_running_time_log = []
-    for epoch in range(30):
+    for epoch in range(epochs_num):
         print('epoch ' + str(epoch))
         points = []
         for i in range(numpoints):
@@ -161,9 +177,58 @@ for budget in [100 + ii for ii in range (0, 300, 50)]:
         greedy_p_running_time_log.append(greedy_time)
         ordered_p_running_time_log.append(ordered_time)
         
-    overall_results.append({'budget': budget, 'numpoints':numpoints,
+    # overall_results.append({'budget': budget, 'numpoints':numpoints,
+    #                         'average_greedy_p' : np.average(greedy_p_result_log),
+    #                         'average_ordered_p' : np.average(ordered_p_result_log),
+    #                         'average_greedy_running_time' : np.average(greedy_p_running_time_log),
+    #                        'average_ordered_running_time' : np.average(ordered_p_running_time_log)})
+    overall_results.append({'budget': budget,
+                            'greedy_p' : greedy_p_result_log,
+                            'ordered_p' : ordered_p_result_log,
                             'average_greedy_p' : np.average(greedy_p_result_log),
                             'average_ordered_p' : np.average(ordered_p_result_log),
-                            'average_greedy_running_time' : np.average(greedy_p_running_time_log),
-                           'average_ordered_running_time' : np.average(ordered_p_running_time_log)})
-        
+                            'greedy_running_time' : greedy_p_running_time_log,
+                           'ordered_running_time' : ordered_p_running_time_log})
+plt.rcParams.update({
+    "text.usetex": True,
+    "font.family": "Helvetica"
+})
+averages_greedy = []
+averages_ordered = []
+averages_running_times = []
+for result in overall_results:
+    x = [i for i in range(epochs_num)]
+    plt.title(r'$\mathrm{greedy \hspace{0.1cm} budget \hspace{0.1cm}}' + str(result['budget']) + '$')
+    plt.ylabel(r'$\mathrm{probability}$')
+    plt.xlabel(r'$\mathrm{iteration}$')
+    plt.scatter(x, result['greedy_p'], color = 'r')
+    plt.savefig('detection_prob_greedy_budget'+str(result['budget']) + '.pdf', format = 'pdf', dpi = 1200, bbox_inches='tight')
+    plt.clf()
+
+    plt.title(r'$\mathrm{ordered \hspace{0.1cm} budget \hspace{0.1cm}}' + str(result['budget']) + '$')
+    plt.ylabel(r'$\mathrm{probability}$')
+    plt.xlabel(r'$\mathrm{iteration}$')
+    plt.scatter(x, result['ordered_p'], color = 'b')
+    plt.savefig('detection_prob_ordered_budget'+str(result['budget']) + '.pdf', format = 'pdf', dpi = 1200, bbox_inches='tight')
+    plt.clf()
+    
+    averages_greedy.append(result['average_greedy_p'])
+    averages_ordered.append(result['average_ordered_p'])
+    averages_running_times(np.average(result['ordered_running_time']))
+
+plt.xticks(budgets_array)
+plt.ylabel(r'$\mathrm{probability}$')
+plt.xlabel(r'$\mathrm{budget}$')
+plt.scatter(budgets_array, averages_greedy, label = r'$\mathrm{greedy \hspace{0.1cm} heuristic}$', color = 'r')
+plt.scatter(budgets_array, averages_ordered, label = r'$\mathrm{ordered \hspace{0.1cm} heuristic}$', color = 'b')
+plt.legend()
+plt.savefig('prob_detection.pdf', format = 'pdf', dpi = 1200, bbox_inches='tight')
+plt.clf()
+
+plt.xticks(budgets_array)
+plt.ylabel(r'$\mathrm{runtime}$')
+plt.xlabel(r'$\mathrm{budget}$')
+plt.scatter(budgets_array, averages_running_times, color = 'b')
+plt.legend()
+plt.savefig('running_time.pdf', format = 'pdf', dpi = 1200, bbox_inches='tight')
+plt.clf()

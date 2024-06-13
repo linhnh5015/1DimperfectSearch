@@ -54,7 +54,7 @@ for l in range(numpoints):
             for t in range(budget_tau):
                 subproblems = np.array([])
                 for j in range(math.floor(t/search_cost[i]) + 1):
-                    subproblems = np.append(subproblems, p_prime[max(0, t - j*search_cost[i])] + (1 - beta[i]**j)*target_distribution[i])
+                    subproblems = np.append(subproblems, p[max(0, t - j*search_cost[i])] + (1 - beta[i]**j)*target_distribution[i])
                 if (subproblems.size > 0):
                     argmax = np.argmax(subproblems)
                     p[t] = subproblems[argmax]
