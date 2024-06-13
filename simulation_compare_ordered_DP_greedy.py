@@ -16,6 +16,7 @@ import random
 import numpy as np
 import math
 import networkx as nx
+import time
 
 
 
@@ -108,16 +109,22 @@ def greedy_heuristic(points, search_cost, target_distribution, beta, budget):
     return prob_of_success
 
 budget = 100
-numpoints = 10
+numpoints = 20
 # size of bounding box
 xmin = 0
 xmax = 10
 ymin = 0
 ymax = 10
 
-
-for budget in [100, 110, 120]:
-    for numpoints in [10 + j for j in range(10)]:
+overall_results = []
+for budget in [100 + ii for ii in range (0, 300, 50)]:
+    print('budget = ' + str(budget))
+    greedy_p_result_log = []
+    ordered_p_result_log = []
+    greedy_p_running_time_log = []
+    ordered_p_running_time_log = []
+    for epoch in range(30):
+        print('epoch ' + str(epoch))
         points = []
         for i in range(numpoints):
             points.append(np.array([random.uniform(xmin, xmax), random.uniform(ymin, ymax)]))
@@ -139,7 +146,24 @@ for budget in [100, 110, 120]:
 
         sum_dist = sum(target_distribution)
         target_distribution = target_distribution/sum_dist
-        greedy_p = greedy_heuristic(points, search_cost, target_distribution, beta, budget)
-        ordered_p = ordered_DP_heuristic(points, search_cost, target_distribution, beta, budget)
         
-        print('budget = ' + str(budget) + ', numpoints = ' + str(numpoints) + ', greedy gives ' + str(greedy_p) + ', ordered DP gives ' + str(ordered_p))
+        start = time.time()
+        greedy_p = greedy_heuristic(points, search_cost, target_distribution, beta, budget)
+        end = time.time()
+        greedy_time = end - start
+        
+        start = time.time()
+        ordered_p = ordered_DP_heuristic(points, search_cost, target_distribution, beta, budget)
+        end = time.time()
+        ordered_time = end - start
+        greedy_p_result_log.append(greedy_p)
+        ordered_p_result_log.append(ordered_p)
+        greedy_p_running_time_log.append(greedy_time)
+        ordered_p_running_time_log.append(ordered_time)
+        
+    overall_results.append({'budget': budget, 'numpoints':numpoints,
+                            'average_greedy_p' : np.average(greedy_p_result_log),
+                            'average_ordered_p' : np.average(ordered_p_result_log),
+                            'average_greedy_running_time' : np.average(greedy_p_running_time_log),
+                           'average_ordered_running_time' : np.average(ordered_p_running_time_log)})
+        
