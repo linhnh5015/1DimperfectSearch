@@ -8,14 +8,13 @@ Created on Mon Jun 10 11:42:28 2024
 import random
 import numpy as np
 import math
-import networkx as nx
 
 def euclidean_distance(p1, p2):
     if (p1 == 0) or (p2 == 0):
         return 0
-    return np.linalg.norm(points[p1-1] - points[p2-1])
+    return np.linalg.norm(points[p1] - points[p2])
 
-budget = 50
+budget = 100
 numpoints = 10
 # size of bounding box
 xmin = 0
@@ -23,11 +22,13 @@ xmax = 10
 ymin = 0
 ymax = 10
 
-points = [np.array([random.uniform(xmin, xmax), random.uniform(ymin, ymax)]) for i in range(numpoints)]    
-
-search_cost = np.array([], dtype = np.dtype(int))
-target_distribution = np.array([])
-beta = np.array([]) # false negative rates
+points = [(-1, -1)] # v_0
+for i in range(numpoints):
+    points.append(np.array([random.uniform(xmin, xmax), random.uniform(ymin, ymax)]))
+    
+search_cost = np.array([0], dtype = np.dtype(int))
+target_distribution = np.array([0])
+beta = np.array([0]) # false negative rates
 
 # intitialize the problem
 
@@ -53,8 +54,8 @@ for i in range(1, numpoints+1):
     for t in range(tau):
         subproblems = np.array([])
         for k in range(0, i):
-            for j in range(math.floor((t - euclidean_distance(i, k)*big_C)/(search_cost[i-1]*big_C)) + 1):
-                subproblems = np.append(subproblems, p[k, max(0, t - math.floor(j*search_cost[i-1]*big_C + euclidean_distance(i, k)*big_C))] + (1 - beta[i-1]**j)*target_distribution[i-1])
+            for j in range(math.floor((t - euclidean_distance(i, k)*big_C)/(search_cost[i]*big_C)) + 1):
+                subproblems = np.append(subproblems, p[k, max(0, t - math.floor(j*search_cost[i]*big_C + euclidean_distance(i, k)*big_C))] + (1 - beta[i]**j)*target_distribution[i])
             if (subproblems.size > 0):
                 argmax = np.argmax(subproblems)
                 p[i, t] = subproblems[argmax]
